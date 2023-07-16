@@ -1,39 +1,21 @@
 name: Send release notifications
+# Send notification on build complete, either success or failure
 on:
-  release:
-    types: [published]
-
+  push:
+    branches:
+      - main
 jobs:
   send-notification:
     runs-on: ubuntu-latest
     steps:
-      - name: Post to Slack channel
-        id: slack
-        uses: slackapi/slack-github-action@v1.23.0
+      - name: Notify on completion
+        if: always()
+        uses: rtCamp/action-slack-notify@v2.1.0
         with:
-          channel-id: "releases"
-          payload: |
-            {
-              "blocks":[
-                {
-                  "type": "header",
-                  "text":  {
-                    "type": "plain_text",
-                    "text": "${{ github.event.release.tag_name}} is out! 🚢"
-                  }
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "${{ github.event.release.html_url }}"
-                  }
-                }
-              ]
-            }
+          status: ${{ job.status }}
+          fields: repo,message,author,commit,action,eventName,ref,workflow,job,took
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_RELEASE }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Discord Notification
         id: discord-notification
